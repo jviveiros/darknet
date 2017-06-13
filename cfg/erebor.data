@@ -1,0 +1,6 @@
+ classes= 1
+ train  = /Users/joeviveiros/darknet/data/erebor/Campbells_Brocolli_Soup_list.txt
+ valid  = /Users/joeviveiros/ml_train/051000013477_Campbells_broccoli_cheese_10oz/*.jpg
+ names = /Users/joeviveiros/darknet/data/erebor.names
+ backup = backup
+
