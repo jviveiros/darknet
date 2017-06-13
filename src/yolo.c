@@ -6,12 +6,28 @@
 #include "box.h"
 #include "demo.h"
 
+
 char *voc_names[] = {"aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow", "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"};
 
 void train_yolo(char *cfgfile, char *weightfile)
 {
     char *train_images = "/data/voc/train.txt";
     char *backup_directory = "/home/pjreddie/backup/";
+=======
+/* Change class number here */
+#define CLASSNUM 2
+
+/* Change class names here */
+char *voc_names[] = {"stopsign", "yeildsign"};
+image voc_labels[CLASSNUM];
+
+void train_yolo(char *cfgfile, char *weightfile)
+{
+    /* Change training folders here */
+    char *train_images = "BBoxLabelTool/train.txt";
+
+    /* Change output weight folders here */
+    char *backup_directory = "/u03/Guanghan/dev/darknet-master/backup/";a
     srand(time(0));
     char *base = basecfg(cfgfile);
     printf("%s\n", base);
@@ -23,6 +39,7 @@ void train_yolo(char *cfgfile, char *weightfile)
     printf("Learning Rate: %g, Momentum: %g, Decay: %g\n", net.learning_rate, net.momentum, net.decay);
     int imgs = net.batch*net.subdivisions;
     int i = *net.seen/imgs;
+    printf("\n\n\n\n\n\n\nimgs = %d,\n i= %d\n", imgs, i);
     data train, buffer;
 
 
@@ -225,8 +242,9 @@ void validate_yolo_recall(char *cfgfile, char *weightfile)
     int i=0;
 
     float thresh = .001;
+    int nms = 0;
     float iou_thresh = .5;
-    float nms = 0;
+    float nms_thresh = .5;
 
     int total = 0;
     int correct = 0;
@@ -238,9 +256,15 @@ void validate_yolo_recall(char *cfgfile, char *weightfile)
         image orig = load_image_color(path, 0, 0);
         image sized = resize_image(orig, net.w, net.h);
         char *id = basecfg(path);
+<<<<<<< HEAD
         network_predict(net, sized.data);
         get_detection_boxes(l, orig.w, orig.h, thresh, probs, boxes, 1);
         if (nms) do_nms(boxes, probs, side*side*l.n, 1, nms);
+=======
+        float *predictions = network_predict(net, sized.data);
+        convert_yolo_detections(predictions, classes, l.n, square, side, 1, 1, thresh, probs, boxes, 1);
+        if (nms) do_nms(boxes, probs, side*side*l.n, 1, nms_thresh);
+>>>>>>> cd0a3ef2de8826471b526e2ceb9ae3329de01fea
 
         char labelpath[4096];
         find_replace(path, "images", "labels", labelpath);
@@ -314,9 +338,13 @@ void test_yolo(char *cfgfile, char *weightfile, char *filename, float thresh)
         printf("%s: Predicted in %f seconds.\n", input, sec(clock()-time));
         get_detection_boxes(l, 1, 1, thresh, probs, boxes, 0);
         if (nms) do_nms_sort(boxes, probs, l.side*l.side*l.n, l.classes, nms);
+<<<<<<< HEAD
         //draw_detections(im, l.side*l.side*l.n, thresh, boxes, probs, voc_names, alphabet, 20);
         draw_detections(im, l.side*l.side*l.n, thresh, boxes, probs, voc_names, alphabet, 20);
         save_image(im, "predictions");
+=======
+        draw_detections(im, l.side*l.side*l.n, thresh, boxes, probs, voc_names, voc_labels, CLASSNUM);
+>>>>>>> cd0a3ef2de8826471b526e2ceb9ae3329de01fea
         show_image(im, "predictions");
 
         free_image(im);
@@ -329,9 +357,65 @@ void test_yolo(char *cfgfile, char *weightfile, char *filename, float thresh)
     }
 }
 
+<<<<<<< HEAD
 void run_yolo(int argc, char **argv)
 {
     char *prefix = find_char_arg(argc, argv, "-prefix", 0);
+=======
+/*
+#ifdef OPENCV
+image ipl_to_image(IplImage* src);
+#include "opencv2/highgui/highgui_c.h"
+#include "opencv2/imgproc/imgproc_c.h"
+
+void demo_swag(char *cfgfile, char *weightfile, float thresh)
+{
+network net = parse_network_cfg(cfgfile);
+if(weightfile){
+load_weights(&net, weightfile);
+}
+detection_layer layer = net.layers[net.n-1];
+CvCapture *capture = cvCaptureFromCAM(-1);
+set_batch_network(&net, 1);
+srand(2222222);
+while(1){
+IplImage* frame = cvQueryFrame(capture);
+image im = ipl_to_image(frame);
+cvReleaseImage(&frame);
+rgbgr_image(im);
+
+image sized = resize_image(im, net.w, net.h);
+float *X = sized.data;
+float *predictions = network_predict(net, X);
+draw_swag(im, predictions, layer.side, layer.n, "predictions", thresh);
+free_image(im);
+free_image(sized);
+cvWaitKey(10);
+}
+}
+#else
+void demo_swag(char *cfgfile, char *weightfile, float thresh){}
+#endif
+ */
+
+void demo_yolo(char *cfgfile, char *weightfile, float thresh, int cam_index, char* filename);
+#ifndef GPU
+void demo_yolo(char *cfgfile, char *weightfile, float thresh, int cam_index, char* filename)
+{
+    fprintf(stderr, "Darknet must be compiled with CUDA for YOLO demo.\n");
+}
+#endif
+
+void run_yolo(int argc, char **argv)
+{
+    int i;
+    for(i = 0; i < CLASSNUM; ++i){
+        char buff[256];
+        sprintf(buff, "data/labels/%s.png", voc_names[i]);
+        voc_labels[i] = load_image_color(buff, 0, 0);
+    }
+
+>>>>>>> cd0a3ef2de8826471b526e2ceb9ae3329de01fea
     float thresh = find_float_arg(argc, argv, "-thresh", .2);
     int cam_index = find_int_arg(argc, argv, "-c", 0);
     int frame_skip = find_int_arg(argc, argv, "-s", 0);
@@ -348,5 +432,10 @@ void run_yolo(int argc, char **argv)
     else if(0==strcmp(argv[2], "train")) train_yolo(cfg, weights);
     else if(0==strcmp(argv[2], "valid")) validate_yolo(cfg, weights);
     else if(0==strcmp(argv[2], "recall")) validate_yolo_recall(cfg, weights);
+<<<<<<< HEAD
     else if(0==strcmp(argv[2], "demo")) demo(cfg, weights, thresh, cam_index, filename, voc_names, 20, frame_skip, prefix, avg, .5, 0,0,0,0);
+=======
+    else if(0==strcmp(argv[2], "demo_cam")) demo_yolo(cfg, weights, thresh, cam_index, "NULL");
+    else if(0==strcmp(argv[2], "demo_vid")) demo_yolo(cfg, weights, thresh, -1, filename);
+>>>>>>> cd0a3ef2de8826471b526e2ceb9ae3329de01fea
 }
