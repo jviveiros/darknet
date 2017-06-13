@@ -13,7 +13,6 @@ void train_yolo(char *cfgfile, char *weightfile)
 {
     char *train_images = "/data/voc/train.txt";
     char *backup_directory = "/home/pjreddie/backup/";
-=======
 /* Change class number here */
 #define CLASSNUM 2
 
