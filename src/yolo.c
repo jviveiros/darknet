@@ -350,11 +350,10 @@ void test_yolo(char *cfgfile, char *weightfile, char *filename, float thresh)
     }
 }
 
-<<<<<<< HEAD
+
 void run_yolo(int argc, char **argv)
 {
     char *prefix = find_char_arg(argc, argv, "-prefix", 0);
-
 
 void demo_yolo(char *cfgfile, char *weightfile, float thresh, int cam_index, char* filename);
 #ifndef GPU
